@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <com.example.android.camera2basic.PinchZoomImageView
+        android:id="@+id/image_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
+
+    <LinearLayout
+        android:id="@+id/control"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:background="@color/cardview_dark_background"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <ImageButton
+            android:id="@+id/image_share"
+            style="@android:style/Widget.Material.Light.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.25"
+            android:src="@android:drawable/ic_menu_share"/>
+
+        <ImageButton
+            android:id="@+id/prev_image"
+            style="@android:style/Widget.Material.Light.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.25"
+            android:src="@drawable/ic_menu_back"/>
+
+        <ImageButton
+            android:id="@+id/next_image"
+            style="@android:style/Widget.Material.Light.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.25"
+            android:src="@drawable/ic_menu_forward"/>
+
+        <ImageButton
+            android:id="@+id/image_delete"
+            style="@android:style/Widget.Material.Light.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.25"
+            android:src="@android:drawable/ic_menu_delete"/>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

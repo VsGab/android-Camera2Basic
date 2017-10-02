@@ -14,8 +14,23 @@
  limitations under the License.
 -->
 <resources>
-    <string name="picture">Picture</string>
+    <string name="picture">Capture</string>
+    <string name="password_reset">Reset password</string>
+    <string name="password_enter">Enter password</string>
+    <string name="password_ok">Password cached</string>
+    <string name="password_incorrect">Password incorrect</string>
+    <string name="browser_unavailable">File browser unavailable</string>
+    <string name="magic_label">Magic string</string>
+    <string name="password_invalid">Password has to be at least 8 characters</string>
+    <string name="gallery">Gallery</string>
+    <string name="camera">Camera</string>
+    <string name="password_button">Set</string>
     <string name="description_info">Info</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="password_not_set">Password not set</string>
+    <string name="title_activity_import">ImportActivity</string>
+    <string name="peer_password">Peer password</string>
+    <string name="peer_magic">Peer magic</string>
+    <string name="import_image">Import</string>
 </resources>

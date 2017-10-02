@@ -17,6 +17,7 @@
 package com.example.android.camera2basic;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -24,6 +25,7 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -41,12 +43,13 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
 import android.media.ImageReader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -59,10 +62,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -156,6 +155,8 @@ public class Camera2BasicFragment extends Fragment
 
     };
 
+    private SecureSnapApp mApp;
+
     /**
      * ID of the current {@link CameraDevice}.
      */
@@ -230,11 +231,6 @@ public class Camera2BasicFragment extends Fragment
     private ImageReader mImageReader;
 
     /**
-     * This is the output file for our picture.
-     */
-    private File mFile;
-
-    /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
      * still image is ready to be saved.
      */
@@ -243,7 +239,7 @@ public class Camera2BasicFragment extends Fragment
 
         @Override
         public void onImageAvailable(ImageReader reader) {
-            mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+            mBackgroundHandler.post(mApp.nextImageSaver(reader.acquireNextImage()));
         }
 
     };
@@ -289,7 +285,45 @@ public class Camera2BasicFragment extends Fragment
         private void process(CaptureResult result) {
             switch (mState) {
                 case STATE_PREVIEW: {
+
                     // We have nothing to do when the camera preview is working normally.
+                    // TODO: handle auto focus
+                    Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                    if (afState != null && !afState.equals(mLastAfState)) {
+                        switch (afState) {
+                            case CaptureResult.CONTROL_AF_STATE_INACTIVE:
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_INACTIVE");
+                                lockAutoFocus();
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_ACTIVE_SCAN:
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_ACTIVE_SCAN");
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED:
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED");
+                                mUiHandler.removeCallbacks(mLockAutoFocusRunnable);
+                                mUiHandler.postDelayed(mLockAutoFocusRunnable, LOCK_FOCUS_DELAY_ON_FOCUSED);
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED:
+                                mUiHandler.removeCallbacks(mLockAutoFocusRunnable);
+                                mUiHandler.postDelayed(mLockAutoFocusRunnable, LOCK_FOCUS_DELAY_ON_UNFOCUSED);
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED");
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_PASSIVE_UNFOCUSED:
+                                mUiHandler.removeCallbacks(mLockAutoFocusRunnable);
+                                //mUiHandler.postDelayed(mLockAutoFocusRunnable, LOCK_FOCUS_DELAY_ON_UNFOCUSED);
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_PASSIVE_UNFOCUSED");
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_PASSIVE_SCAN:
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_PASSIVE_SCAN");
+                                break;
+                            case CaptureResult.CONTROL_AF_STATE_PASSIVE_FOCUSED:
+                                mUiHandler.removeCallbacks(mLockAutoFocusRunnable);
+                                //mUiHandler.postDelayed(mLockAutoFocusRunnable, LOCK_FOCUS_DELAY_ON_FOCUSED);
+                                Log.d(TAG, "CaptureResult.CONTROL_AF_STATE_PASSIVE_FOCUSED");
+                                break;
+                        }
+                    }
+                    mLastAfState = afState;
                     break;
                 }
                 case STATE_WAITING_LOCK: {
@@ -297,6 +331,7 @@ public class Camera2BasicFragment extends Fragment
                     if (afState == null) {
                         captureStillPicture();
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
+                            CaptureResult.CONTROL_AF_STATE_PASSIVE_FOCUSED == afState || CaptureResult.CONTROL_AF_STATE_PASSIVE_UNFOCUSED == afState ||
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
                         Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
@@ -382,7 +417,7 @@ public class Camera2BasicFragment extends Fragment
      * @return The optimal {@code Size}, or an arbitrary one if none were big enough
      */
     private static Size chooseOptimalSize(Size[] choices, int textureViewWidth,
-            int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
+                                          int textureViewHeight, int maxWidth, int maxHeight, Size aspectRatio) {
 
         // Collect the supported resolutions that are at least as big as the preview Surface
         List<Size> bigEnough = new ArrayList<>();
@@ -394,7 +429,7 @@ public class Camera2BasicFragment extends Fragment
             if (option.getWidth() <= maxWidth && option.getHeight() <= maxHeight &&
                     option.getHeight() == option.getWidth() * h / w) {
                 if (option.getWidth() >= textureViewWidth &&
-                    option.getHeight() >= textureViewHeight) {
+                        option.getHeight() >= textureViewHeight) {
                     bigEnough.add(option);
                 } else {
                     notBigEnough.add(option);
@@ -427,14 +462,14 @@ public class Camera2BasicFragment extends Fragment
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         view.findViewById(R.id.picture).setOnClickListener(this);
-        view.findViewById(R.id.info).setOnClickListener(this);
+        view.findViewById(R.id.browse).setOnClickListener(this);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
+        mApp = (SecureSnapApp) getActivity().getApplication();
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mFile = new File(getActivity().getExternalFilesDir(null), "pic.jpg");
     }
 
     @Override
@@ -667,6 +702,7 @@ public class Camera2BasicFragment extends Fragment
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        mUiHandler.removeCallbacks(mLockAutoFocusRunnable);
     }
 
     /**
@@ -704,7 +740,8 @@ public class Camera2BasicFragment extends Fragment
                             try {
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+                                            CaptureRequest.CONTROL_AF_MODE_AUTO);
+
                                 // Flash is automatically enabled when necessary.
                                 setAutoFlash(mPreviewRequestBuilder);
 
@@ -765,7 +802,7 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Initiate a still image capture.
      */
-    private void takePicture() {
+    public void takePicture() {
         lockFocus();
     }
 
@@ -775,12 +812,14 @@ public class Camera2BasicFragment extends Fragment
     private void lockFocus() {
         try {
             // This is how to tell the camera to lock focus.
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_START);
-            // Tell #mCaptureCallback to wait for the lock.
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+            CaptureRequest captureRequest = mPreviewRequestBuilder.build();
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null); // prevent CONTROL_AF_TRIGGER_START from calling over and over again
             mState = STATE_WAITING_LOCK;
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
+            mCaptureSession.capture(captureRequest, mCaptureCallback, mBackgroundHandler);
+
+            // Tell #mCaptureCallback to wait for the lock.
+
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -820,8 +859,9 @@ public class Camera2BasicFragment extends Fragment
             captureBuilder.addTarget(mImageReader.getSurface());
 
             // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+                        CaptureRequest.CONTROL_AF_MODE_AUTO);
+
             setAutoFlash(captureBuilder);
 
             // Orientation
@@ -835,8 +875,7 @@ public class Camera2BasicFragment extends Fragment
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session,
                                                @NonNull CaptureRequest request,
                                                @NonNull TotalCaptureResult result) {
-                    showToast("Saved: " + mFile);
-                    Log.d(TAG, mFile.toString());
+                    showToast("Saved");
                     unlockFocus();
                 }
             };
@@ -890,14 +929,7 @@ public class Camera2BasicFragment extends Fragment
                 takePicture();
                 break;
             }
-            case R.id.info: {
-                Activity activity = getActivity();
-                if (null != activity) {
-                    new AlertDialog.Builder(activity)
-                            .setMessage(R.string.intro_message)
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show();
-                }
+            case R.id.browse: {
                 break;
             }
         }
@@ -910,49 +942,6 @@ public class Camera2BasicFragment extends Fragment
         }
     }
 
-    /**
-     * Saves a JPEG {@link Image} into the specified {@link File}.
-     */
-    private static class ImageSaver implements Runnable {
-
-        /**
-         * The JPEG image
-         */
-        private final Image mImage;
-        /**
-         * The file we save the image into.
-         */
-        private final File mFile;
-
-        public ImageSaver(Image image, File file) {
-            mImage = image;
-            mFile = file;
-        }
-
-        @Override
-        public void run() {
-            ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            FileOutputStream output = null;
-            try {
-                output = new FileOutputStream(mFile);
-                output.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                mImage.close();
-                if (null != output) {
-                    try {
-                        output.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-    }
 
     /**
      * Compares two {@code Size}s based on their areas.
@@ -1029,6 +1018,54 @@ public class Camera2BasicFragment extends Fragment
                             })
                     .create();
         }
+    }
+
+    /////////////////////////////////////////
+    private static final long LOCK_FOCUS_DELAY_ON_FOCUSED = 5000;
+    private static final long LOCK_FOCUS_DELAY_ON_UNFOCUSED = 1000;
+
+    private Integer mLastAfState = null;
+    private Handler mUiHandler = new Handler(); // UI handler
+    private Runnable mLockAutoFocusRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            lockAutoFocus();
+        }
+    };
+
+
+    public void lockAutoFocus() {
+        try {
+            // This is how to tell the camera to lock focus.
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+            CaptureRequest captureRequest = mPreviewRequestBuilder.build();
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, null); // prevent CONTROL_AF_TRIGGER_START from calling over and over again
+            mCaptureSession.capture(captureRequest, mCaptureCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * @return
+     */
+    private float getMinimumFocusDistance() {
+        if (mCameraId == null)
+            return 0;
+
+        Float minimumLens = null;
+        try {
+            CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+            CameraCharacteristics c = manager.getCameraCharacteristics(mCameraId);
+            minimumLens = c.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+        } catch (Exception e) {
+            Log.e(TAG, "isHardwareLevelSupported Error", e);
+        }
+        if (minimumLens != null)
+            return minimumLens;
+        return 0;
     }
 
 }

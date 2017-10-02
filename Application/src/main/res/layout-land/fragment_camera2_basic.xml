@@ -44,7 +44,7 @@
             android:text="@string/picture" />
 
         <ImageButton
-            android:id="@+id/info"
+            android:id="@+id/browse"
             style="@android:style/Widget.Material.Light.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

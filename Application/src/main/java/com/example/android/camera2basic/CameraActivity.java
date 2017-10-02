@@ -18,18 +18,36 @@ package com.example.android.camera2basic;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.KeyEvent;
+import android.widget.Toast;
 
 public class CameraActivity extends Activity {
+    Camera2BasicFragment mFragment;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
         if (null == savedInstanceState) {
+            mFragment = Camera2BasicFragment.newInstance();
             getFragmentManager().beginTransaction()
-                    .replace(R.id.container, Camera2BasicFragment.newInstance())
+                    .replace(R.id.container, mFragment)
                     .commit();
         }
+    }
+
+    public void capture() {
+        mFragment.takePicture();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN)){
+            capture();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
 }

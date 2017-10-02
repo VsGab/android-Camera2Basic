@@ -16,7 +16,8 @@
 -->
 
 <resources>
-    <string name="app_name">Camera2Basic</string>
+    <string name="app_name">SecureSnap</string>
+    <string name="preference_file_key">secure_snap</string>
     <string name="intro_message">
         <![CDATA[
         

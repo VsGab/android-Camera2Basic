@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
  Copyright 2014 The Android Open Source Project
 
@@ -14,25 +14,46 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.camera2basic">
+          package="com.example.android.camera2basic">
 
-    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
-    <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-feature android:name="android.hardware.camera"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"/>
 
-    <application android:allowBackup="true"
-        android:label="@string/app_name"
+    <application
+        android:name=".SecureSnapApp"
+        android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
         android:theme="@style/MaterialTheme">
-
-        <activity android:name=".CameraActivity"
-                  android:label="@string/app_name">
+        <activity
+            android:name=".CameraActivity"
+            android:label="@string/app_name">
+        </activity>
+        <activity
+            android:name=".GalleryActivity"
+            android:label="@string/app_name">
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="ImportActivity"
+            android:label="@string/title_activity_import">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data
+                    android:mimeType="application/octet-stream"
+                    android:scheme="content"/>
             </intent-filter>
         </activity>
     </application>
