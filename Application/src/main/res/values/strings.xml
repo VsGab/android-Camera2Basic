@@ -33,4 +33,14 @@
     <string name="peer_password">Peer password</string>
     <string name="peer_magic">Peer magic</string>
     <string name="import_image">Import</string>
+    <string name="view_image">View</string>
+    <string name="delay_string">Delay(s)</string>
+
+    <string-array name="delay_array">
+        <item>0</item>
+        <item>5</item>
+        <item>10</item>
+    </string-array>
+
+
 </resources>

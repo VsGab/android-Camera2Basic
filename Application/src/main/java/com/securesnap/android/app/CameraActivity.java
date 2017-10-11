@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.widget.Toast;
 
 public class CameraActivity extends Activity {
     Camera2BasicFragment mFragment;

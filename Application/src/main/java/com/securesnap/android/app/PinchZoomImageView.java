@@ -1,4 +1,4 @@
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,16 +6,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
-import android.widget.ImageView;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 /**
  * Created by nigelhenshaw on 23/01/2016.

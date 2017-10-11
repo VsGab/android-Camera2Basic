@@ -4,7 +4,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-    <com.example.android.camera2basic.PinchZoomImageView
+    <com.securesnap.android.app.PinchZoomImageView
         android:id="@+id/image_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,7 +27,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.25"
-            android:src="@android:drawable/ic_menu_share"/>
+            android:src="@android:drawable/ic_menu_share"
+            android:visibility="invisible"/>
 
         <ImageButton
             android:id="@+id/prev_image"
@@ -35,7 +36,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.25"
-            android:src="@drawable/ic_menu_back"/>
+            android:src="@drawable/ic_menu_back"
+            android:visibility="invisible"/>
 
         <ImageButton
             android:id="@+id/next_image"
@@ -43,7 +45,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.25"
-            android:src="@drawable/ic_menu_forward"/>
+            android:src="@drawable/ic_menu_forward"
+            android:visibility="invisible"/>
 
         <ImageButton
             android:id="@+id/image_delete"
@@ -51,7 +54,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.25"
-            android:src="@android:drawable/ic_menu_delete"/>
+            android:src="@android:drawable/ic_menu_delete"
+            android:visibility="invisible"/>
 
     </LinearLayout>
 

@@ -1,4 +1,4 @@
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.content.Intent;
 import android.os.Bundle;

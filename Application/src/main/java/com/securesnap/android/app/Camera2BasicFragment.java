@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -25,7 +24,6 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -44,12 +42,11 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -60,6 +57,7 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -229,6 +227,9 @@ public class Camera2BasicFragment extends Fragment
      * An {@link ImageReader} that handles still image capture.
      */
     private ImageReader mImageReader;
+
+
+    private Spinner mDelayDropdown;
 
     /**
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
@@ -465,6 +466,7 @@ public class Camera2BasicFragment extends Fragment
         view.findViewById(R.id.browse).setOnClickListener(this);
         mTextureView = (AutoFitTextureView) view.findViewById(R.id.texture);
         mApp = (SecureSnapApp) getActivity().getApplication();
+        mDelayDropdown = (Spinner) getActivity().findViewById(R.id.delay_dropdown);
     }
 
     @Override
@@ -803,7 +805,31 @@ public class Camera2BasicFragment extends Fragment
      * Initiate a still image capture.
      */
     public void takePicture() {
-        lockFocus();
+        final int delay = Integer.parseInt(String.valueOf(mDelayDropdown.getSelectedItem()));
+
+        if (delay == 0) {
+            lockFocus();
+        }
+        else {
+            showToast("Capture in " + delay + " seconds");
+            AsyncTask.execute(new Runnable() {
+                                  @Override
+                                  public void run() {
+                                      try {
+                                          Thread.sleep(delay * 1000);
+                                      } catch (InterruptedException e) {
+                                          e.printStackTrace();
+                                      }
+                                      getActivity().runOnUiThread(new Runnable() {
+                                          @Override
+                                          public void run() {
+                                            lockFocus();
+                                          }
+                                      });
+                                  }
+                              });
+        }
+
     }
 
     /**

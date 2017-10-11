@@ -1,18 +1,13 @@
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Image;
-import android.net.Uri;
 import android.os.AsyncTask;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

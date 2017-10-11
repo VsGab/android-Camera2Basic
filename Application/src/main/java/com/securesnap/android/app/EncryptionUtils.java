@@ -1,14 +1,11 @@
-package com.example.android.camera2basic;
+package com.securesnap.android.app;
 
 import android.util.Base64;
 import android.util.Log;
 
-import java.io.DataInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -17,11 +14,9 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -69,14 +64,24 @@ public class EncryptionUtils {
     }
 
     public static SecretKeySpec buildKey(String password, String b64RandSalt) {
+        byte[] key = buildKeyRaw(password,b64RandSalt);
+        SecretKeySpec secret = new SecretKeySpec(key, 0, key.length, "AES");
+        return secret;
+    }
+
+    public static SecretKeySpec buildKey(byte[] key) {
+        SecretKeySpec secret = new SecretKeySpec(key, 0, key.length, "AES");
+        return secret;
+    }
+
+    public static byte[] buildKeyRaw(String password, String b64RandSalt) {
         byte[] saltBytes = buildSalt(b64RandSalt);
 
         try {
             SecretKeyFactory factory = SecretKeyFactory.getInstance(PBKD_ALGORITHM);
             KeySpec spec = new PBEKeySpec(password.toCharArray(), saltBytes, PBKD_ITERATIONS, 256);
             SecretKey tmp = factory.generateSecret(spec);
-            SecretKeySpec secret = new SecretKeySpec(tmp.getEncoded(), "AES");
-            return secret;
+            return tmp.getEncoded();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         } catch (InvalidKeySpecException e) {
